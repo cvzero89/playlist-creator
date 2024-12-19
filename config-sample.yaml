@@ -1,0 +1,47 @@
+database:
+  path: 'channels_stream.db'
+
+output_file: 'playlist.m3u8'
+
+playlist:
+  url: 'URL to get the playlist'
+  name: 'ext-play.m3u8'
+  splitter: '|' # - Used to retrieve the stream link, it will depend on how the playlist is formatted.
+  modify: # - Modify stream link before processing.
+    active: False
+    modifier: ['', '']
+
+EPG_1:
+  url: 'URL to get the EPG'
+  name: 'epg1.xml'
+
+EPG_2:
+  url: 'URL to get the EPG'
+  name: 'epg2.xml'
+
+github:
+  token: 'github_token'
+  url: 'git_repo_URL'
+
+threadfin:
+  active: False
+  url: 'http://localhost:34400/api/'
+
+trim_filter: ['group-title="testing"',
+              'group-title=another"']
+
+channels:
+  Channel 1: 
+    aliases: ['channel 1', 'this is also channel 1', 'chann1']
+    wanted: True
+    instances: 3
+
+  Channel 2: 
+    aliases: ['Channel2']
+    wanted: True
+    instances: 2
+
+  Channel 3: 
+    aliases: ['Channel 3', 'Channl3']
+    wanted: True
+    instances: 1

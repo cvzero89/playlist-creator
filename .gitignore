@@ -1,0 +1,6 @@
+config/*.yaml
+*.db
+__pycache__/
+assets/
+venv/
+.DS_Store
