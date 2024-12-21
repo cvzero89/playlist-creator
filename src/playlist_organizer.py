@@ -102,10 +102,14 @@ def scoring_streams(database_path, channels):
 Writes a playlist taking into account the position on the configuration file to make sure they always retain the same tv_id.
 """
 
-def write_playlist(database_path, streams, output_name, channels):
+def write_playlist(database_path, streams, output_name, channels, writing_mod):
+    if writing_mod:
+        tv_id, group_title = writing_mod
+    else:
+        tv_id = 0
+        group_title = 'IPTV'
     with open(output_name, 'w') as playlist:
         playlist.write('#EXTM3U\n')
-        tv_id = 0
         for channel in channels:
             if channels[channel]['wanted'] is not True:
                 continue
@@ -118,7 +122,7 @@ def write_playlist(database_path, streams, output_name, channels):
                     stream_link = streams[channel][x][0]
                     stream_name = channel
                     tv_id = tv_id + 1
-                    info = f'''\n#EXTINF:-1, tvg-id=\"{tv_id}\" tvg-name="{stream_name}" tvg-logo="{tv_logo}" group-title="IPTV" {stream_name}\n{stream_link}\n'''
+                    info = f'''\n#EXTINF:-1, tvg-id=\"{tv_id}\" tvg-name="{stream_name}" tvg-logo="{tv_logo}" group-title="{group_title}" {stream_name}\n{stream_link}\n'''
                     playlist.write(info)
                 except KeyError:
                     print(f'Number of instances wanted {instances} for {channel}, but found {x} streams.')

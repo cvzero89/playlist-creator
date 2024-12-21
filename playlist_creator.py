@@ -59,7 +59,7 @@ def main():
     """
     Important variables:
     """
-    _version = 'v0.1'
+    _version = 'v0.2'
     database = loaded_config['database']['path']
     database_path = f'{script_path}/{database}'
     channels = loaded_config['channels']
@@ -67,7 +67,7 @@ def main():
     playlist_url = loaded_config['playlist']['url']
 
     print_config(_version, config_file, database_path, channels, playlist_url, download_path)
-
+    
     """
     Create database:
     """
@@ -139,9 +139,9 @@ def main():
     except KeyError:
         output_file = None
     if output_file:
-        write_playlist(database_path, streams, f'{script_path}/assets/{output_file}', channels)
+        write_playlist(database_path, streams, f'{script_path}/assets/{output_file}', channels, loaded_config['playlist']['writing'].values())
     else:
-        write_playlist(database_path, streams, f'{script_path}/assets/playlist.m3u8', channels)
+        write_playlist(database_path, streams, f'{script_path}/assets/playlist.m3u8', channels, loaded_config['playlist']['writing'].values())
 
 
     """
