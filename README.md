@@ -7,7 +7,14 @@ Multiple configuration files can be used to manage alternate lists and settings:
 
 `python3 playlist-creator.py --config {path_to_alternate_config}`
 
-Help:
+## Installation
+It is recommended to set up a virtual environment: https://docs.python.org/3/library/venv.html
+
+- Clone this repo
+- pip3 install -r requirements
+
+## Usage
+
 `
 usage: playlist_creator.py [-h] [--config CONFIG] [--git] [--trim] [--process]
 
@@ -20,8 +27,3 @@ options:
   --trim           Trims long files based on filters.
   --process        Processes the streams on the raw list to database.
 `
-## Installation
-It is recommended to set up a virtual environment: https://docs.python.org/3/library/venv.html
-
-- Clone this repo
-- pip3 install -r requirements

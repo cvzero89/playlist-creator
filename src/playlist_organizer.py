@@ -122,7 +122,7 @@ def write_playlist(database_path, streams, output_name, channels, writing_mod):
                     stream_link = streams[channel][x][0]
                     stream_name = channel
                     tv_id = tv_id + 1
-                    info = f'''\n#EXTINF:-1, tvg-id=\"{tv_id}\" tvg-name="{stream_name}" tvg-logo="{tv_logo}" group-title="{group_title}" {stream_name}\n{stream_link}\n'''
+                    info = f'''\n#EXTINF:{tv_id} channelID="x-ID.{tv_id}" tvg-id=\"{tv_id}\" tvg-name="{stream_name}" tvg-logo="{tv_logo}" group-title="{group_title}", {stream_name}\n{stream_link}\n'''
                     playlist.write(info)
                 except KeyError:
                     print(f'Number of instances wanted {instances} for {channel}, but found {x} streams.')
