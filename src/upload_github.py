@@ -1,6 +1,8 @@
 import git
 import os
 import shutil
+import textwrap
+
 def upload_files_to_github(token, repo_url, directory_path, commit_message):
     """
     Upload the contents of a directory to a GitHub repository.
@@ -37,6 +39,16 @@ def upload_files_to_github(token, repo_url, directory_path, commit_message):
                 shutil.copytree(src_path, dest_path)
             else:
                 shutil.copy2(src_path, dest_path)
+        
+        with open(f'{repo_dir}/.gitignore', 'w') as git_ignore:
+            content = textwrap.dedent("""\
+                                    .DS_Store
+                                    *tmp*
+                                    cache/*
+                                    filtered*
+                                    raw*
+""")
+            git_ignore.write(content)
 
         # Stage all changes, commit, and push
         repo.git.add(A=True)  # Add all changes
