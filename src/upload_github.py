@@ -29,7 +29,7 @@ def upload_files_to_github(token, repo_url, directory_path, commit_message):
             authenticated_repo_url = repo_url.replace("https://", f"https://oauth2:{token}@")
 
         # Clone the repository
-        repo = git.Repo.clone_from(authenticated_repo_url, repo_dir)
+        repo = git.Repo.clone_from(authenticated_repo_url, repo_dir, depth=1)
         
         # Copy all contents from the given directory to the cloned repository directory
         for item in os.listdir(directory_path):
