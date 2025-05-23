@@ -1,6 +1,9 @@
 import sqlite3
 import json
+import logging
 from src.misc_functions import similar
+
+logger = logging.getLogger(__name__)
 
 def create_database(db_name="channels_streams.db"):
     conn = sqlite3.connect(db_name)
@@ -69,14 +72,14 @@ def add_channels(db_name, channels):
 
         # Check for duplicate names
         if any(name in existing_names for name in json.loads(names_json)):
-            print(f"Channel not added: A channel with names {names} already exists in the database.")
+            logger.debug(f"Channel not added: A channel with names {names} already exists in the database.")
             continue
 
         # Add the channel if no conflicts were found
         cursor.execute('''
             INSERT INTO channels (name, picon) VALUES (?, ?)
         ''', (names_json, picon))
-        print(f"Channel added: {names}")
+        logger.info(f"Channel added: {names}")
 
     conn.commit()
     conn.close()
@@ -95,7 +98,7 @@ def add_stream(db_name, stream):
     # Check if the stream link already exists
     cursor.execute('SELECT id FROM streams WHERE link = ?', (stream.link,))
     existing_stream = cursor.fetchone()
-
+    status_stream = 'Active' if stream.availability else 'Offline'
     if existing_stream:
         # Update the existing stream
         cursor.execute('''
@@ -103,14 +106,14 @@ def add_stream(db_name, stream):
             SET name = ?, availability = ?, last_seen = ?, resolution = ?, codec = ?, channel_id = ?
             WHERE link = ?
         ''', (stream.name, stream.availability, stream.last_seen, stream.resolution, stream.video_codec, stream.channel_id, stream.link))
-        print(f"Stream updated: {stream.link}")
+        print(f"Stream updated: {stream.link} - {stream.name} - {status_stream}.")
     else:
         # Add a new stream
         cursor.execute('''
             INSERT INTO streams (name, link, availability, last_seen, resolution, codec, channel_id)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         ''', (stream.name, stream.link, stream.availability, stream.last_seen, stream.resolution, stream.video_codec, stream.channel_id))
-        print(f"Stream added: {stream.link}")
+        print(f"Stream added: {stream.link} - {stream.name} - {status_stream}.")
 
     conn.commit()
     conn.close()
@@ -146,7 +149,7 @@ def find_channel_id(database_path, stream_name):
                 pass  # Ignore rows with invalid JSON
         return 0
     except sqlite3.Error as e:
-        print(f"Database error: {e}")
+        logger.error(f'Database error: {e}')
         return 0
 
 def fetch_stream_details(db_name, channel_name):
@@ -166,7 +169,7 @@ def fetch_stream_details(db_name, channel_name):
         conn.close()
         return results
     except sqlite3.Error as e:
-        print(f"Database error: {e}")
+        logger.error(f'Database error: {e}')
         return []
 
 def fetch_logo(db_name, channel_name):
@@ -186,5 +189,5 @@ def fetch_logo(db_name, channel_name):
             return tv_logo
         return results
     except sqlite3.Error as e:
-        print(f'Database error: {e}')
+        logger.error(f'Database error: {e}')
         return 'https://gitlab.blackbirdrecordings.com/cvzero89/livetv/-/raw/main/icon/404.png'

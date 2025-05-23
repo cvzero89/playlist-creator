@@ -1,6 +1,9 @@
+import logging
 from src.classesStream import Stream
 from src.misc_functions import similar, sort_dictionary
 from src.database_management import add_stream, fetch_stream_details, fetch_logo
+
+logger = logging.getLogger(__name__)
 
 """
 Iterates through a playlist matching the name of the stream with the aliases on the configuration file.
@@ -28,7 +31,7 @@ def process_playlist(database_path, playlist_name, channels, splitter='|'):
                 
                 if similar(aliases, stream.name):  # Match using the `similar` function
                     if channel_wanted:
-                        print(f'{stream.name} with {stream.link}')
+                        logger.debug(f'{stream.name} with {stream.link}')
                         stream.get_video_info()  # Fetch additional info
                         stream.channel_id_finder(channel)
                         add_stream(database_path, stream)
@@ -36,6 +39,7 @@ def process_playlist(database_path, playlist_name, channels, splitter='|'):
                         break  
                     else: 
                         print(f'{stream.name}, does not match {aliases}')
+                        logger.info(f'{stream.name}, does not match {aliases}')
         i += 1  
 
 """
@@ -81,7 +85,7 @@ def scoring_streams(database_path, channels):
         aliases_formatted = "[" + ", ".join(f'"{name}"' for name in aliases) + "]"
         available_streams = fetch_stream_details(database_path, aliases_formatted)
         if not available_streams:
-            print(f'{name} has no available streams.')
+            logger.info(f'{name} has no available streams.')
             scored_streams[name] = {}
             scored_streams[name][0] = []
             data = 'https://streaming.rtvc.gov.co/TV_Senal_Colombia_live/smil:live.smil/playlist.m3u8', 20
@@ -125,5 +129,5 @@ def write_playlist(database_path, streams, output_name, channels, writing_mod):
                     info = f'''\n#EXTINF:{tv_id} channelID="x-ID.{tv_id}" tvg-id=\"{tv_id}\" tvg-name="{stream_name}" tvg-logo="{tv_logo}" group-title="{group_title}", {stream_name}\n{stream_link}\n'''
                     playlist.write(info)
                 except KeyError:
-                    print(f'Number of instances wanted {instances} for {channel}, but found {x} streams.')
+                    logger.info(f'Number of instances wanted {instances} for {channel}, but found {x} streams.')
                     continue

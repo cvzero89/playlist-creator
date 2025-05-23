@@ -2,6 +2,9 @@ import git
 import os
 import shutil
 import textwrap
+import logging
+
+logger = logging.getLogger(__name__)
 
 def upload_files_to_github(token, repo_url, directory_path, commit_message):
     """
@@ -59,6 +62,8 @@ def upload_files_to_github(token, repo_url, directory_path, commit_message):
         shutil.rmtree(repo_dir)
 
         print(f'Success! The contents of {directory_path} have been uploaded to the repository.')
+        logger.info('Success! The contents have been uploaded to the repository.')
 
     except Exception as e:
         print(f'Failed to upload directory: {e}')
+        logger.error(f'Failed to upload directory: {e}')

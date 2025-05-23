@@ -2,6 +2,9 @@ from difflib import SequenceMatcher
 import xml.etree.ElementTree as ET
 import json
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 def similar(a, b, threshold=0.98, return_score=False):
     """
@@ -10,7 +13,7 @@ def similar(a, b, threshold=0.98, return_score=False):
     for item in a:
         score = SequenceMatcher(None, item.lower(), b.lower()).ratio()
         if score >= threshold and return_score is False:
-            print(f'Match {item} with {b} score: {score}')
+            logger.debug(f'Match {item} with {b} score: {score}')
             return True
         elif return_score is True:
             return score
@@ -346,7 +349,7 @@ class FileDownloader:
 
         filename = os.path.basename(self.url)
         if not filename:
-            print("Invalid URL: No filename could be determined.")
+            logger.error("Invalid URL: No filename could be determined.")
             return None
         elif self.skip_download is True:
             return os.path.join(self.directory, self.rename)
@@ -357,11 +360,11 @@ class FileDownloader:
             with open(file_path, 'wb') as file:
                 for chunk in response.iter_content(chunk_size=8192):
                     file.write(chunk)
-            print(f"Downloaded: {filename}")
+            logger.info(f"Downloaded: {filename}")
             filename = self.process_file(filename)
             return filename
         except requests.exceptions.RequestException as e:
-            print(f"Failed to download {filename}: {e}")
+            logger.info(f"Failed to download {filename}: {e}")
             return None
 
     def process_file(self, filename):
@@ -372,7 +375,7 @@ class FileDownloader:
         if filename.endswith('.gz'):
             return self._extract_gzip(file_path, self.rename)
         else:
-            print(f"No processing needed for {filename}. Just renaming...")
+            logger.debug(f"No processing needed for {filename}. Just renaming...")
             return self._rename_file(file_path, self.rename)
 
     def _extract_gzip(self, source, target_name):
@@ -384,10 +387,10 @@ class FileDownloader:
             with gzip.open(source, 'rb') as file_in, open(target_path, 'wb') as file_out:
                 shutil.copyfileobj(file_in, file_out)
             os.remove(source)
-            print(f"Extracted {source} to {target_path}")
+            logger.debug(f"Extracted {source} to {target_path}")
             return target_path
         except Exception as e:
-            print(f"Failed to extract {source}: {e}")
+            logger.error(f"Failed to extract {source}: {e}")
             return None
 
     def _rename_file(self, source, target_name):
@@ -397,10 +400,10 @@ class FileDownloader:
         target_path = os.path.join(self.directory, target_name)
         try:
             os.rename(source, target_path)
-            print(f"Renamed {source} to {target_path}")
+            logger.debug(f"Renamed {source} to {target_path}")
             return target_path
         except Exception as e:
-            print(f"Failed to rename {source} to {target_path}: {e}")
+            logger.error(f"Failed to rename {source} to {target_path}: {e}")
             return None
     
     def _check_timestamps(self):
@@ -413,7 +416,7 @@ class FileDownloader:
             current_time = time.time()
             return current_time - creation_time <= 24 * 60 * 60
         else:
-            print(f'File has not been downloaded recently.')
+            logger.info(f'File has not been downloaded recently.')
             return False
 
 def clean_episode_numbers(xml_file):
@@ -495,10 +498,10 @@ def replace_in_playlist(playlist, replace_list):
         with open(playlist, 'w', encoding='utf-8') as file:
             file.write(updated_content)
 
-        print(f"Replacements completed successfully in {playlist}.")
+        logger.info(f"Replacements completed successfully in {playlist}.")
 
     except FileNotFoundError:
-        print(f"Error: The file '{playlist}' does not exist.")
+        logger.error(f"Error: The file '{playlist}' does not exist.")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
 

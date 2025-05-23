@@ -1,11 +1,9 @@
 import os
 import yaml
 import argparse
-from src.database_management import create_database, add_channels
-from src.classesStream import Channel
-from src.playlist_organizer import trim_playlist, process_playlist, scoring_streams, write_playlist
-from src.misc_functions import FileDownloader, clean_episode_numbers, update_threadfin_api, replace_in_playlist
-from src.upload_github import upload_files_to_github
+import logging
+from logging.handlers import RotatingFileHandler
+from src.tasks import initial_tasks, assets_download, run_tasks, score_playlist, upload_to_github, update_threadfin
 
 def import_configuration(config_location):
     try:
@@ -24,6 +22,22 @@ def import_configuration(config_location):
         print(f'Error parsing {config_location}.')
         exit()
 
+def setup_logging(loaded_config):
+    log_file = loaded_config['logging'].get('log_file', None)
+    log_level = loaded_config['logging'].get('log_level', None)
+    max_log_size = loaded_config['logging'].get('max_log_size', None)
+    backup_count = loaded_config['logging'].get('backup_count', None)
+    numeric_level = getattr(logging, log_level.upper(), logging.INFO)
+    log_file_location = f'{os.path.abspath(os.path.dirname(__file__))}/{log_file}'
+    handler = RotatingFileHandler(log_file_location, maxBytes=max_log_size, backupCount=backup_count)
+    handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+
+    logging.basicConfig(
+        level=numeric_level,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[handler, logging.StreamHandler()]
+    )
+
 def print_config(_version, config_file, database_path, channels, playlist_url, download_path):
     print(f'Playlist creator {_version}.')
     number_channels = len(channels.keys())
@@ -41,11 +55,13 @@ def main():
     parser.add_argument('--git', help='Upload the playlist and EPGs to GitHub/GitLab.', action='store_true')
     parser.add_argument('--trim', help='Trims long files based on filters.', action='store_true')
     parser.add_argument('--process', help='Processes the streams on the raw list to database.', action='store_true')
+    parser.add_argument('--score', help='Scores playlist based on existing DB.', action='store_true')
     args = parser.parse_args()
-    upload_to_github = args.git
+    git_enabled = args.git
     config_other = args.config
     trim = args.trim
     process = args.process
+    score = args.score
 
     print('Importing configuration...')
     script_path = os.path.abspath(os.path.dirname(__file__))
@@ -59,7 +75,7 @@ def main():
     """
     Important variables:
     """
-    _version = 'v0.2'
+    _version = 'v0.3'
     database = loaded_config['database']['path']
     database_path = f'{script_path}/{database}'
     channels = loaded_config['channels']
@@ -67,106 +83,21 @@ def main():
     playlist_url = loaded_config['playlist']['url']
 
     print_config(_version, config_file, database_path, channels, playlist_url, download_path)
-    
-    """
-    Create database:
-    """
+    setup_logging(loaded_config)
+    initial_tasks(database_path, channels)
 
-    create_database(database_path)
+    playlist = assets_download(download_path, playlist_url, loaded_config)
 
-    """
-    Load channels and add them to the database:
-    """
-    print('\nAdding channels:')
-    for name in channels:
-        aliases = channels[name]['aliases']
-        channel = Channel(name, aliases)
-        channel_tuple = [(channel.aliases, channel.picon)]
-        add_channels(database_path, channel_tuple)
-
-    """
-    Downloading EPG and M3U to /assets/:
-    """
-    print('\nDownloading assets:')
-    playlist = FileDownloader(download_path, playlist_url, loaded_config['playlist']['name']).download_file()
-    if not playlist:
-        print('Playlist failed to download, aborting.')
-        exit()
-    EPG_1 = FileDownloader(download_path, loaded_config['EPG_1']['url'], loaded_config['EPG_1']['name']).download_file()
-    if EPG_1:
-        clean_episode_numbers(EPG_1)
-    
-    try:
-        EPG_2 = FileDownloader(download_path, loaded_config['EPG_2']['url'], loaded_config['EPG_2']['name']).download_file()
-    except KeyError:
-        print('Only 1 EPG was specified in the config file.')
-
-    try:
-        modify = loaded_config['playlist']['modify']['active']
-        replacements = loaded_config['playlist']['modify']['modifier']
-        if modify is True:
-            replace_in_playlist(playlist, replacements)
-    except KeyError:
-        pass
-
-    """
-    Trimming the list. Useful for long playlists that might include unwanted streams that should not go to the DB.
-    After adding the streams to the database after checking the details with FFProbe.
-    """
-
-    print('\nProcessing playlist, testing with FFProbe:')
-
-    try:
-        splitter = loaded_config['playlist']['splitter']
-    except KeyError:
-        print('Splitter is not defined in playlist config, using default.')
-        splitter = '|'
-    if trim is True and process is not True:
-        playlist_name = trim_playlist(download_path, playlist, loaded_config['trim_filter'])
-        process_playlist(database_path, playlist_name, channels, splitter)
-    elif process is True and trim is not True:
-        process_playlist(database_path, playlist, channels, splitter)
-    elif process is True and trim is True:
-        print(f'Both trim and process cannot be used.')
-    
-    """
-    Scoring and sorting all of the streams found on the database.
-    """
-    print(f'\nRetrieving streams from {database_path} and scoring to write the final playlist:')
-    streams = scoring_streams(database_path, channels)
-    try:
-        output_file = loaded_config['output_file']
-    except KeyError:
-        output_file = None
-    if output_file:
-        write_playlist(database_path, streams, f'{script_path}/assets/{output_file}', channels, loaded_config['playlist']['writing'].values())
+    if score is True:
+        score_playlist(database_path, channels, script_path, loaded_config)
     else:
-        write_playlist(database_path, streams, f'{script_path}/assets/playlist.m3u8', channels, loaded_config['playlist']['writing'].values())
+        run_tasks(trim, process, database_path, download_path, playlist, channels, loaded_config)
+        score_playlist(database_path, channels, script_path, loaded_config)
 
+    if git_enabled is True:
+        upload_to_github(download_path, loaded_config)
 
-    """
-    Uploading to GitHub/GitLab for easier management of the EPG and playlist. This is not necessary, it is added as a flag.
-    """
-    if upload_to_github is True:
-        print('\nUploading to Git repo:')
-        try:
-            token = loaded_config['github']['token']
-            repo_url = loaded_config['github']['url']
-            upload_files_to_github(token, repo_url, download_path, f'Updating playlist and guides')
-        except KeyError:
-            print('Error uploading to GitHub. Check token and URL.')
-    
-    """
-    If using Threadfin, the API can help update the info in real time.
-    """
-    try:
-        threadfin = loaded_config['threadfin']['active']
-        if threadfin is True:
-            print('\nUpdating Threadfin:')
-            update_threadfin_api(loaded_config['threadfin']['url'], 'epg')
-            update_threadfin_api(loaded_config['threadfin']['url'], 'm3u')
-    except KeyError:
-        pass
+    update_threadfin(loaded_config)
 
     print('All done!')
 

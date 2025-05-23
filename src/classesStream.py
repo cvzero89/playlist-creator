@@ -1,8 +1,11 @@
 from datetime import datetime
 import re
+import logging
 from src.prober import probing
 from src.misc_functions import similar, picons
 from src.database_management import find_channel_id
+
+logger = logging.getLogger(__name__)
 
 """
 Stream class to standarize the naming, cleaning up a lot that comes on the playlists and
@@ -19,7 +22,7 @@ class Stream():
         video_stream = probing(self.link)
         now = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         if not video_stream:
-            print(f'{self.link} contained no video information.')
+            logger.debug(f'{self.link} contained no video information.')
             self.availability = False
             self.last_seen = False
             self.resolution = None
@@ -62,6 +65,6 @@ class Channel():
         if best_score >= 0.60:
             return gitlab_url_perm + best_match + '.png'
         else:
-            print(f"No match for channel: {self.name} (Best match: {best_match}, Score: {best_score})")
+            logger.info(f"No match for channel: {self.name} (Best match: {best_match}, Score: {best_score})")
             return gitlab_url_perm + '404.png'
 
