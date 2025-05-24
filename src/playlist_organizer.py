@@ -67,30 +67,38 @@ def trim_playlist(path, name, trim_filter):
 Scoring the streams to only add the best ones to the actual playlist.
 """
 
-def scoring_streams(database_path, channels):
+def scoring_streams(database_path, channels, override_scoring, dummy_url):
     scored_streams = {}
-    codec_score = {
-        'hevc': 10,
-        'h264': 7,
-        'mpeg2video': 4,
-    }
-    resolution_score = {
-        '1080': 10,
-        '720': 7,
-        '2160': 4,
-        '576': 2,
-    }
+    if override_scoring:
+        codec_score = override_scoring['codec_score']
+        resolution_score = override_scoring['resolution_score']
+    else:
+        codec_score = {
+            'hevc': 10,
+            'h264': 7,
+            'mpeg2video': 4,
+        }
+        resolution_score = {
+            '1080': 10,
+            '720': 4,
+            '2160': 7,
+            '576': 2,
+        }
     for name in channels:
         aliases = channels[name]['aliases']
         aliases_formatted = "[" + ", ".join(f'"{name}"' for name in aliases) + "]"
         available_streams = fetch_stream_details(database_path, aliases_formatted)
+        instances = channels[name]['instances']
         if not available_streams:
             logger.info(f'{name} has no available streams.')
             scored_streams[name] = {}
-            scored_streams[name][0] = []
-            data = 'https://streaming.rtvc.gov.co/TV_Senal_Colombia_live/smil:live.smil/playlist.m3u8', 20
-            scored_streams[name][0].extend(data)
+            for instance in range(instances):
+                scored_streams[name][instance] = []
+                data = dummy_url, 20
+                scored_streams[name][instance].extend(data)
         else:
+            data = [dummy_url, "hvec", '1980x1080']
+            available_streams.extend([data] * (instances - len(available_streams)))
             for number, result in enumerate(available_streams):
                 link, codec, resolution = result
                 stream_score = codec_score.get(codec, 2) + resolution_score.get(resolution.split('x')[-1], 1)
@@ -122,12 +130,12 @@ def write_playlist(database_path, streams, output_name, channels, writing_mod):
             tv_logo = fetch_logo(database_path, aliases_formatted)
             instances = channels[channel]['instances']
             for x in range(instances):
+                stream_name = channel
                 try:
                     stream_link = streams[channel][x][0]
-                    stream_name = channel
                     tv_id = tv_id + 1
                     info = f'''\n#EXTINF:{tv_id} channelID="x-ID.{tv_id}" tvg-id=\"{tv_id}\" tvg-name="{stream_name}" tvg-logo="{tv_logo}" group-title="{group_title}", {stream_name}\n{stream_link}\n'''
                     playlist.write(info)
                 except KeyError:
-                    logger.info(f'Number of instances wanted {instances} for {channel}, but found {x} streams.')
+                    logger.error(f'Number of instances wanted {instances} for {channel}, but found {x} streams.')
                     continue

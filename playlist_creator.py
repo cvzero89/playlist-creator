@@ -13,28 +13,32 @@ def import_configuration(config_location):
             if set(minimum_config).issubset(set(list(config.keys()))) is False:
                 print(f'Minimum config keys missing: {minimum_config}')
                 print(config.keys())
-                exit()
+                exit(1)
             return config
     except FileNotFoundError:
         print('Config file not found.')
-        exit()
+        exit(1)
     except yaml.YAMLError:
         print(f'Error parsing {config_location}.')
-        exit()
+        exit(1)
 
-def setup_logging(loaded_config):
+def setup_logging(loaded_config, script_path):
+    log_path = f'{script_path}/logs'
+    if not os.path.exists(log_path):
+        os.makedirs(log_path)
     log_file = loaded_config['logging'].get('log_file', None)
     log_level = loaded_config['logging'].get('log_level', None)
     max_log_size = loaded_config['logging'].get('max_log_size', None)
     backup_count = loaded_config['logging'].get('backup_count', None)
     numeric_level = getattr(logging, log_level.upper(), logging.INFO)
-    log_file_location = f'{os.path.abspath(os.path.dirname(__file__))}/{log_file}'
+    log_file_location = f'{log_path}/{log_file}'
     handler = RotatingFileHandler(log_file_location, maxBytes=max_log_size, backupCount=backup_count)
-    handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+    handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"))
 
     logging.basicConfig(
         level=numeric_level,
         format="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
         handlers=[handler, logging.StreamHandler()]
     )
 
@@ -75,16 +79,17 @@ def main():
     """
     Important variables:
     """
-    _version = 'v0.3'
+    _version = 'v1.0'
     database = loaded_config['database']['path']
     database_path = f'{script_path}/{database}'
     channels = loaded_config['channels']
     download_path = f'{script_path}/assets'
     playlist_url = loaded_config['playlist']['url']
+    picon_url = loaded_config['picon']['url']
 
     print_config(_version, config_file, database_path, channels, playlist_url, download_path)
-    setup_logging(loaded_config)
-    initial_tasks(database_path, channels)
+    setup_logging(loaded_config, script_path)
+    initial_tasks(database_path, channels, picon_url)
 
     playlist = assets_download(download_path, playlist_url, loaded_config)
 
@@ -105,8 +110,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
-

@@ -48,13 +48,13 @@ class Stream():
 Used to add the channels to the database. 
 """
 class Channel():
-    def __init__(self, name, aliases):
+    def __init__(self, name, aliases, picon_url):
         self.name = name
         self.aliases = aliases
+        self.picon_url = picon_url
         self.picon = self.get_icon()
     
     def get_icon(self):
-        gitlab_url_perm = "https://gitlab.blackbirdrecordings.com/cvzero89/livetv/-/raw/main/icon/"
         best_match = None
         best_score = 0
         for icon in picons:
@@ -63,8 +63,8 @@ class Channel():
                 best_match = icon
                 best_score = score
         if best_score >= 0.60:
-            return gitlab_url_perm + best_match + '.png'
+            return self.picon_url + best_match + '.png'
         else:
             logger.info(f"No match for channel: {self.name} (Best match: {best_match}, Score: {best_score})")
-            return gitlab_url_perm + '404.png'
+            return self.picon_url + '404.png'
 

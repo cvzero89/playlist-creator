@@ -190,4 +190,4 @@ def fetch_logo(db_name, channel_name):
         return results
     except sqlite3.Error as e:
         logger.error(f'Database error: {e}')
-        return 'https://gitlab.blackbirdrecordings.com/cvzero89/livetv/-/raw/main/icon/404.png'
+        return 'https://www.svgrepo.com/show/376230/status-notfound.svg'

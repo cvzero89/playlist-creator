@@ -7,7 +7,7 @@ from src.upload_github import upload_files_to_github
 
 logger = logging.getLogger(__name__)
 
-def initial_tasks(database_path, channels):
+def initial_tasks(database_path, channels, picon_url):
     """
     Create database:
     """
@@ -20,7 +20,7 @@ def initial_tasks(database_path, channels):
     logger.info('Adding channels...')
     for name in channels:
         aliases = channels[name]['aliases']
-        channel = Channel(name, aliases)
+        channel = Channel(name, aliases, picon_url)
         channel_tuple = [(channel.aliases, channel.picon)]
         add_channels(database_path, channel_tuple)
     logger.info('Done!')
@@ -82,7 +82,9 @@ def score_playlist(database_path, channels, script_path, loaded_config):
     Scoring and sorting all of the streams found on the database.
     """
     print(f'\nRetrieving streams from {database_path} and scoring to write the final playlist:')
-    streams = scoring_streams(database_path, channels)
+    override_scoring = loaded_config.get('override_scoring', None)
+    dummy_url = loaded_config.get('dummy_url', 'https://streaming.rtvc.gov.co/TV_Senal_Colombia_live/smil:live.smil/playlist.m3u8')
+    streams = scoring_streams(database_path, channels, override_scoring, dummy_url)
     try:
         output_file = loaded_config['output_file']
     except KeyError:
