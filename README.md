@@ -31,3 +31,33 @@ options:
 ## Using Git
 
 The --git flag is used to upload the M3U and EPG files to a Git repo. You have to first create an empty repo and a key with write capabilities to use this.
+
+## Overriding scores
+
+By default the script uses:
+```
+        codec_score = {
+            'hevc': 10,
+            'h264': 7,
+            'mpeg2video': 4,
+        }
+        resolution_score = {
+            '1080': 10,
+            '720': 4,
+            '2160': 7,
+            '576': 2,
+        }
+```
+You can set any other scoring you need based on your M3U8 file.
+
+## Trim filter
+
+```
+trim_filter: ['group-title="testing"',
+              'group-title=another"']
+```
+This can be used to only score and evaluate streams in these groups. Useful for large lists.
+
+## Dummy URL
+
+The script will inject a random URL to keep # of instances consistent. This is important to pass the same number of streams (in the same order) to your player. This helps to prevent errors with mixed IDs.
