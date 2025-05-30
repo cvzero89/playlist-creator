@@ -10,6 +10,12 @@ playlist:
   modify: # - Modify stream link before processing.
     active: False
     modifier: ['', '']
+  writing:
+    starting_id: 0
+    group-title: 'IPTV'
+  
+picon:
+  url: 'https://example.com/icon'
 
 EPG_1:
   url: 'URL to get the EPG'
