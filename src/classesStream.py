@@ -36,7 +36,7 @@ class Stream():
             self.last_seen = now
 
     def cleanup_name(self, name):
-        cleaning = re.sub(r'(#####)?(U?F?HD)?( #####)?|4K|ᴴᴰ\ ᵐᶻ|HEVC|RAW|SD|\[LIVEEVENT\]|\(SOLO EVENTOS\)|(1080p|1080P|1080|1080 MultiAudio|720|720p)?  \w{1,4}$', '', name).strip()
+        cleaning = re.sub(r'(#####)?(U?F?HD)?( #####)?|4K|ᴴᴰ\ ᵐᶻ|HEVC|RAW|SD|\[LIVEEVENT\]|\(SOLO EVENTOS\)|--> (NEW LOOP)?(NEW ERA)?(ELCANO)?|(1080p|1080P|1080|1080 MultiAudio|720|720p)?  \w{1,4}$', '', name).strip()
         return cleaning
     
     def channel_id_finder(self, channel):
