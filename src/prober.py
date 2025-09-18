@@ -1,5 +1,4 @@
 import ffmpeg
-import sys
 import subprocess
 import logging
 
@@ -11,12 +10,12 @@ def probing(link):
         probe = ffmpeg.probe(link, timeout=timeout)
         video_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
         if video_stream is None:
-            logger.debug('No video stream found', file=sys.stderr)
+            logger.debug('No video stream found')
         return video_stream
     except ffmpeg.Error as e:
-        logger.debug(e.stderr, file=sys.stderr)
+        logger.debug(e)
     except subprocess.TimeoutExpired:
             timeout_seconds = timeout / 1000
-            logger.debug(f"Timeout expired after {timeout_seconds} seconds while probing the link.", file=sys.stderr)
+            logger.debug(f"Timeout expired after {timeout_seconds} seconds while probing the link.")
 
 
