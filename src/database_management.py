@@ -143,7 +143,7 @@ def find_channel_id(database_path, stream_name):
         for channel_id, channel_names in channels:
             try:
                 name_list = json.loads(channel_names)
-                if similar(name_list, stream_name, threshold=0.96):
+                if similar(name_list, stream_name, threshold=1.0):
                     return channel_id
             except json.JSONDecodeError:
                 pass  # Ignore rows with invalid JSON

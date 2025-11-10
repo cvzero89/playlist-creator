@@ -88,6 +88,13 @@ def scoring_streams(database_path, channels, override_scoring, dummy_url):
         aliases = channels[name]['aliases']
         aliases_formatted = "[" + ", ".join(f'"{name}"' for name in aliases) + "]"
         available_streams = fetch_stream_details(database_path, aliases_formatted)
+        logger.debug(
+            f"""Available streams:
+            {available_streams}
+            Score to be used: 
+            {codec_score}
+            {resolution_score}
+            """)
         instances = channels[name]['instances']
         if not available_streams:
             logger.info(f'{name} has no available streams.')
