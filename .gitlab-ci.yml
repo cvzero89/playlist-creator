@@ -5,13 +5,10 @@ stages:
 
 variables:
   DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""  # disables TLS for docker:dind
+  DOCKER_TLS_CERTDIR: ""   # Required for docker:dind
   IMAGE_NAME: "$CI_PROJECT_NAME"
   IMAGE_TAG: "$CI_COMMIT_SHORT_SHA"
-  REGISTRY_URL: "$REGISTRY_URL"  # e.g., registry.yourdomain.com
-  REGISTRY_IMAGE: "$REGISTRY_URL/$IMAGE_NAME:$IMAGE_TAG"
 
-# Docker-in-Docker service for building
 services:
   - docker:dind
 
@@ -22,6 +19,7 @@ build_image:
   stage: build
   image: docker:latest
   script:
+    - REGISTRY_IMAGE="${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
     - echo "Building image $REGISTRY_IMAGE..."
     - docker build -t "$REGISTRY_IMAGE" .
   artifacts:
@@ -33,6 +31,7 @@ push_image:
   stage: push
   image: docker:latest
   script:
+    - REGISTRY_IMAGE="${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
     - echo "Logging into registry..."
     - echo "$REGISTRY_PASSWORD" | docker login "$REGISTRY_URL" -u "$REGISTRY_USERNAME" --password-stdin
     - echo "Pushing image to registry..."
