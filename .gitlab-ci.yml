@@ -10,11 +10,6 @@ variables:
 services:
   - docker:dind
 
-variables:
-  IMAGE_NAME: "playlist-creator"
-  IMAGE_TAG: "$CI_COMMIT_SHORT_SHA"
-  BRANCH_TAG: "$CI_COMMIT_REF_SLUG"
-
 build_and_push:
   stage: build
   script:
