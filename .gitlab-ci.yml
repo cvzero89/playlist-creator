@@ -6,12 +6,10 @@ variables:
   DOCKER_TLS_CERTDIR: ""
   IMAGE_NAME: "$CI_PROJECT_NAME"
   IMAGE_TAG: "$CI_COMMIT_SHORT_SHA"
-
-services:
-  - docker:dind
+  BRANCH_TAG: "$CI_COMMIT_REF_SLUG" 
 
 build_and_push:
-  stage: build
+  stage: build_and_push 
   image: docker:latest
   services:
     - docker:dind
@@ -25,11 +23,15 @@ build_and_push:
 
     - docker push "$REGISTRY_URL/$IMAGE_NAME:$IMAGE_TAG"
 
+    - echo "Tagging image with branch-specific tag: $BRANCH_TAG"
     - docker tag "$REGISTRY_URL/$IMAGE_NAME:$IMAGE_TAG" "$REGISTRY_URL/$IMAGE_NAME:$BRANCH_TAG"
     - docker push "$REGISTRY_URL/$IMAGE_NAME:$BRANCH_TAG"
 
-    - if [ "$CI_COMMIT_REF_NAME" = "main" ]; then docker tag "$REGISTRY_URL/$IMAGE_NAME:$IMAGE_TAG" "$REGISTRY_URL/$IMAGE_NAME:latest"; fi
-    - if [ "$CI_COMMIT_REF_NAME" = "main" ]; then docker push "$REGISTRY_URL/$IMAGE_NAME:latest"; fi
+    - if [ "$CI_COMMIT_REF_NAME" = "main" ]; then
+        echo "Branch is main, tagging and pushing latest"
+        docker tag "$REGISTRY_URL/$IMAGE_NAME:$IMAGE_TAG" "$REGISTRY_URL/$IMAGE_NAME:latest"
+        docker push "$REGISTRY_URL/$IMAGE_NAME:latest"
+      fi
 
 cleanup:
   stage: cleanup
