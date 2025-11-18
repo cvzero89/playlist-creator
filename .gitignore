@@ -1,5 +1,6 @@
 *.log
 config/*.yaml
+!config/config-sample.yaml
 *.db
 __pycache__/
 assets/

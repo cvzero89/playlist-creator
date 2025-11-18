@@ -3,7 +3,8 @@ import yaml
 import argparse
 import logging
 from logging.handlers import RotatingFileHandler
-from src.tasks import initial_tasks, assets_download, run_tasks, score_playlist, upload_to_github, update_threadfin
+from src.tasks import initial_tasks, assets_download, run_tasks, score_playlist, upload_to_github
+from src.version import release_number
 
 def import_configuration(config_location):
     try:
@@ -79,7 +80,7 @@ def main():
     """
     Important variables:
     """
-    _version = 'v1.0'
+    _version = release_number
     database = loaded_config['database']['path']
     database_path = f'{script_path}/{database}'
     channels = loaded_config['channels']
@@ -101,8 +102,6 @@ def main():
 
     if git_enabled is True:
         upload_to_github(download_path, loaded_config)
-
-    update_threadfin(loaded_config)
 
     print('All done!')
 

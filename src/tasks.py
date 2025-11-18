@@ -2,7 +2,7 @@ import logging
 from src.database_management import create_database, add_channels
 from src.classesStream import Channel
 from src.playlist_organizer import trim_playlist, process_playlist, scoring_streams, write_playlist
-from src.misc_functions import FileDownloader, clean_episode_numbers, update_threadfin_api, replace_in_playlist
+from src.misc_functions import FileDownloader, clean_episode_numbers, replace_in_playlist
 from src.upload_github import upload_files_to_github
 
 logger = logging.getLogger(__name__)
@@ -107,16 +107,3 @@ def upload_to_github(download_path, loaded_config):
         print('Error uploading to Git. Check token and URL.')
         logger.error('Error uploading to Git.')
         
-
-def update_threadfin(loaded_config):
-    """
-    If using Threadfin, the API can help update the info in real time.
-    """
-    try:
-        threadfin = loaded_config['threadfin']['active']
-        if threadfin is True:
-            print('\nUpdating Threadfin:')
-            update_threadfin_api(loaded_config['threadfin']['url'], 'epg')
-            update_threadfin_api(loaded_config['threadfin']['url'], 'm3u')
-    except KeyError:
-        pass

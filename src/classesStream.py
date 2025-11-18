@@ -55,16 +55,20 @@ class Channel():
         self.picon = self.get_icon()
     
     def get_icon(self):
-        best_match = None
-        best_score = 0
+        logger.debug(f'Aliases are: {self.aliases}')
+        global_best_score = 0.0
+        global_best_icon = None
+
         for icon in picons:
-            score = similar(self.aliases, icon, threshold=0.8, return_score=True)
-            if score > best_score:
-                best_match = icon
-                best_score = score
-        if best_score >= 0.60:
-            return self.picon_url + best_match + '.png'
+            icon_without_extension = re.sub(r'\.\w{2,6}', '', icon)
+            best_match, score = similar(self.aliases, icon_without_extension, threshold=0.8, return_score=True)
+            if score > global_best_score:
+                global_best_score = score
+                global_best_icon = icon
+        if global_best_score >= 0.80:
+            logger.debug(f'Best score is: {global_best_score}')
+            return self.picon_url + global_best_icon
         else:
-            logger.info(f"No match for channel: {self.name} (Best match: {best_match}, Score: {best_score})")
+            logger.info(f"No match for channel: {self.name} (Best match: {best_match}, Score: {score})")
             return self.picon_url + '404.png'
 

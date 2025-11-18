@@ -61,3 +61,15 @@ This can be used to only score and evaluate streams in these groups. Useful for 
 ## Dummy URL
 
 The script will inject a random URL to keep # of instances consistent. This is important to pass the same number of streams (in the same order) to your player. This helps to prevent errors with mixed IDs.
+
+## Using Docker
+
+```
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - ./assets:/app/assets
+      - ./supercronic-config:/app/supercronic-config
+```
+
+Create a playlist-cron.txt at /app/supercronic-config/ with the crons to run. Documentation: https://github.com/aptible/supercronic

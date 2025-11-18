@@ -29,10 +29,6 @@ github:
   token: 'github_token'
   url: 'git_repo_URL'
 
-threadfin:
-  active: False
-  url: 'http://localhost:34400/api/'
-
 trim_filter: ['group-title="testing"',
               'group-title=another"']
 
