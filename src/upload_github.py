@@ -39,7 +39,7 @@ def upload_files_to_github(token, repo_url, directory_path, commit_message):
             src_path = os.path.join(directory_path, item)
             dest_path = os.path.join(repo_dir, item)
             if os.path.isdir(src_path):
-                shutil.copytree(src_path, dest_path)
+                shutil.copytree(src_path, dest_path, dirs_exist_ok=True)
             else:
                 shutil.copy2(src_path, dest_path)
         

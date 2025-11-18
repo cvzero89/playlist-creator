@@ -27,6 +27,8 @@ build_and_push:
 cleanup:
   stage: cleanup
   image: docker:latest
+  services:
+    - docker:dind
   script:
     - docker system prune -af
   when: always

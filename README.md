@@ -72,4 +72,4 @@ The script will inject a random URL to keep # of instances consistent. This is i
       - ./supercronic-config:/app/supercronic-config
 ```
 
-Create a playlist-cron.txt at /app/supercronic-config/ with the crons to run. Documentation: https://github.com/aptible/supercronic
+Create a playlist-cron.txt at `/app/supercronic-config/` with the crons to run. Documentation: https://github.com/aptible/supercronic
