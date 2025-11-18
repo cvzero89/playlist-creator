@@ -12,26 +12,29 @@ services:
 
 build_and_push:
   stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - echo "$REGISTRY_PASSWORD" | docker login "$REGISTRY_URL" -u "$REGISTRY_USERNAME" --password-stdin
+
   script:
     - echo "Building image for branch: $CI_COMMIT_REF_NAME"
     - docker build -t "$REGISTRY_URL/$IMAGE_NAME:$IMAGE_TAG" .
 
     - docker tag "$REGISTRY_URL/$IMAGE_NAME:$IMAGE_TAG" "$REGISTRY_URL/$IMAGE_NAME:$BRANCH_TAG"
 
-    - echo "$REGISTRY_PASSWORD" | docker login "$REGISTRY_URL" -u "$REGISTRY_USERNAME" --password-stdin
-
     - docker push "$REGISTRY_URL/$IMAGE_NAME:$IMAGE_TAG"
     - docker push "$REGISTRY_URL/$IMAGE_NAME:$BRANCH_TAG"
-
-    - |
-      if [[ "$CI_COMMIT_REF_NAME" == "main" ]]; then
-        echo "Tagging and pushing 'latest'..."
-        docker tag "$REGISTRY_URL/$IMAGE_NAME:$IMAGE_TAG" "$REGISTRY_URL/$IMAGE_NAME:latest"
-        docker push "$REGISTRY_URL/$IMAGE_NAME:latest"
+    
+    - >
+      if [ "$CI_COMMIT_REF_NAME" = "main" ]; then
+        echo "Tagging and pushing latest...";
+        docker tag "$REGISTRY_URL/$IMAGE_NAME:$IMAGE_TAG" "$REGISTRY_URL/$IMAGE_NAME:latest";
+        docker push "$REGISTRY_URL/$IMAGE_NAME:latest";
       else
-        echo "Not main branch → skipping 'latest' tag"
+        echo "Not main branch – skipping latest tag";
       fi
-
 
 cleanup:
   stage: cleanup
